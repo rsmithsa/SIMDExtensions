@@ -12,103 +12,117 @@ namespace SIMDExtensions
     using System.Runtime.CompilerServices;
     using System.Text;
 
-    public static class DoubleExtensions
+    public static partial class DoubleExtensions
     {
-        public static double[] Add(this double[] first, in double[] second)
+        public static string[] UnaryFunctions = new[] { "Abs", "Negate", "Sqrt" };
+        public static string[] BinaryFunctions = new[] { "Add", "Subtract", "Multiply", "Divide", "Max", "Min" };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> AbsVectorImplementation(Vector<double> left)
         {
-            ValidateParameters(first, second);
-
-            var result = new double[first.Length];
-
-            if (Vector.IsHardwareAccelerated)
-            {
-                AddSimdUnsafe(first, second, result);
-            }
-            else
-            {
-                AddFallback(first, second, result);
-            }
-
-            return result;
+            return Vector.Abs(left);
         }
 
-        public static double[] AddAssign(this double[] first, in double[] second)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double AbsScalarImplementation(double left)
         {
-            ValidateParameters(first, second);
-
-            if (Vector.IsHardwareAccelerated)
-            {
-                AddSimdUnsafe(first, second, first);
-            }
-            else
-            {
-                AddFallback(first, second, first);
-            }
-
-            return first;
+            return Math.Abs(left);
         }
 
-        public static void AddFallback(in double[] first, in double[] second, in double[] result)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> NegateVectorImplementation(Vector<double> left)
         {
-            for (int i = 0; i < first.Length; i++)
-            {
-                result[i] = first[i] + second[i];
-            }
+            return Vector.Negate(left);
         }
 
-        public static void AddSimd(in double[] first, in double[] second, in double[] result)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double NegateScalarImplementation(double left)
         {
-            int i = 0;
-            int vectorizedLength = first.Length - Vector<double>.Count;
-
-            for (; i <= vectorizedLength; i += Vector<double>.Count)
-            {
-                var sum = new Vector<double>(first, i) + new Vector<double>(second, i);
-                sum.CopyTo(result, i);
-            }
-
-            for (; i < first.Length; i++)
-            {
-                result[i] = first[i] + second[i];
-            }
+            return -1 * left;
         }
 
-        public static unsafe void AddSimdUnsafe(in double[] first, in double[] second, in double[] result)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> SqrtVectorImplementation(Vector<double> left)
         {
-            int i = 0;
-            int vectorizedLength = first.Length - Vector<double>.Count;
-
-            fixed (double* pFirst = first, pSecond = second, pResult = result)
-            {
-                for (; i <= vectorizedLength; i += Vector<double>.Count)
-                {
-                    var sum = Unsafe.Read<Vector<double>>(pFirst + i) + Unsafe.Read<Vector<double>>(pSecond + i);
-                    Unsafe.Write(pResult + i, sum);
-                }
-            }
-
-            for (; i < first.Length; i++)
-            {
-                result[i] = first[i] + second[i];
-            }
+            return Vector.SquareRoot(left);
         }
 
-        private static void ValidateParameters<T>(T[] first, T[] second)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double SqrtScalarImplementation(double left)
         {
-            if (first == null)
-            {
-                throw new ArgumentNullException(nameof(first));
-            }
+            return Math.Sqrt(left);
+        }
 
-            if (second == null)
-            {
-                throw new ArgumentNullException(nameof(second));
-            }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> AddVectorImplementation(Vector<double> left, Vector<double> right)
+        {
+            return left + right;
+        }
 
-            if (first.Length != second.Length)
-            {
-                throw new ArgumentException("Array length's must be the same.");
-            }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double AddScalarImplementation(double left, double right)
+        {
+            return left + right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> SubtractVectorImplementation(Vector<double> left, Vector<double> right)
+        {
+            return left - right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double SubtractScalarImplementation(double left, double right)
+        {
+            return left - right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> MultiplyVectorImplementation(Vector<double> left, Vector<double> right)
+        {
+            return left * right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double MultiplyScalarImplementation(double left, double right)
+        {
+            return left * right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> DivideVectorImplementation(Vector<double> left, Vector<double> right)
+        {
+            return left / right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double DivideScalarImplementation(double left, double right)
+        {
+            return left / right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> MaxVectorImplementation(Vector<double> left, Vector<double> right)
+        {
+            return Vector.Max(left, right);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double MaxScalarImplementation(double left, double right)
+        {
+            return Math.Max(left, right);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> MinVectorImplementation(Vector<double> left, Vector<double> right)
+        {
+            return Vector.Min(left, right);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static double MinScalarImplementation(double left, double right)
+        {
+            return Math.Min(left, right);
         }
     }
 }
