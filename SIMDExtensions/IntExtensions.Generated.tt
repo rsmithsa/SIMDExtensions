@@ -1,0 +1,201 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="$(TargetDir)\SIMDExtensions.dll" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="SIMDExtensions" #>
+<#@ output extension=".cs" #>
+//-----------------------------------------------------------------------
+// <copyright file="IntExtensions.Generated.cs" company="Richard Smith">
+//     Copyright (c) Richard Smith. All rights reserved.
+// </copyright>
+//-----------------------------------------------------------------------
+
+namespace SIMDExtensions
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Numerics;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+    using System.Text;
+
+    public static partial class IntExtensions
+    {
+<#
+	foreach (var function in IntExtensions.UnaryFunctions)
+	{
+#>
+		public static int[] <#=function#>(this int[] first)
+		{
+			ValidateParameters(first);
+
+            var result = new int[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, result);
+            }
+            else
+            {
+                <#=function#>Fallback(first, result);
+            }
+
+            return result;
+		}
+
+		public static int[] <#=function#>Assign(this int[] first)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, first);
+            }
+            else
+            {
+                <#=function#>Fallback(first, first);
+            }
+
+            return first;
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void <#=function#>Simd(in int[] first, in int[] result)
+		{
+			int vectorizedLength = (first.Length / Vector<int>.Count) * Vector<int>.Count;
+
+            ReadOnlySpan<int> sFirst = first;
+            ReadOnlySpan<Vector<int>> vFirst = MemoryMarshal.Cast<int, Vector<int>>(sFirst.Slice(0, vectorizedLength));
+
+            Span<int> sResult = result;
+            Span<Vector<int>> vResult = MemoryMarshal.Cast<int, Vector<int>>(sResult.Slice(0, vectorizedLength));
+
+            for (int i = 0; i < vFirst.Length; i++)
+            {
+                vResult[i] = <#=function#>VectorImplementation(vFirst[i]);
+            }
+
+            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            {
+                sResult[i] = <#=function#>ScalarImplementation(sFirst[i]);
+            }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void <#=function#>Fallback(in int[] first, in int[] result)
+		{
+			for (int i = 0; i < first.Length; i++)
+            {
+                result[i] = <#=function#>ScalarImplementation(first[i]);
+            }
+		}
+<#
+	}
+#>
+
+<#
+	foreach (var function in DoubleExtensions.BinaryFunctions)
+	{
+#>
+		public static int[] <#=function#>(this int[] first, in int[] second)
+		{
+			ValidateParameters(first, second);
+
+            var result = new int[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, result);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, result);
+            }
+
+            return result;
+		}
+
+		public static int[] <#=function#>Assign(this int[] first, in int[] second)
+        {
+            ValidateParameters(first, second);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, first);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, first);
+            }
+
+            return first;
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void <#=function#>Simd(in int[] first, in int[] second, in int[] result)
+		{
+			int vectorizedLength = (first.Length / Vector<int>.Count) * Vector<int>.Count;
+
+            ReadOnlySpan<int> sFirst = first;
+            ReadOnlySpan<Vector<int>> vFirst = MemoryMarshal.Cast<int, Vector<int>>(sFirst.Slice(0, vectorizedLength));
+
+            ReadOnlySpan<int> sSecond = second;
+            ReadOnlySpan<Vector<int>> vSecond = MemoryMarshal.Cast<int, Vector<int>>(sSecond.Slice(0, vectorizedLength));
+
+            Span<int> sResult = result;
+            Span<Vector<int>> vResult = MemoryMarshal.Cast<int, Vector<int>>(sResult.Slice(0, vectorizedLength));
+
+            for (int i = 0; i < vFirst.Length; i++)
+            {
+                vResult[i] = <#=function#>VectorImplementation(vFirst[i], vSecond[i]);
+            }
+
+            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            {
+                sResult[i] = <#=function#>ScalarImplementation(sFirst[i], sSecond[i]);
+            }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void <#=function#>Fallback(in int[] first, in int[] second, in int[] result)
+		{
+			for (int i = 0; i < first.Length; i++)
+            {
+                result[i] = <#=function#>ScalarImplementation(first[i], second[i]);
+            }
+		}
+<#
+	}
+#>
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ValidateParameters<T>(in T[] first)
+        {
+            if (first == null)
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
+        }
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ValidateParameters<T>(in T[] first, in T[] second)
+        {
+            if (first == null)
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
+
+            if (second == null)
+            {
+                throw new ArgumentNullException(nameof(second));
+            }
+
+            if (first.Length != second.Length)
+            {
+                throw new ArgumentException("Array length's must be the same.");
+            }
+        }
+	}
+}
