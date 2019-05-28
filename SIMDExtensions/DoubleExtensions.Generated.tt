@@ -170,6 +170,78 @@ namespace SIMDExtensions
 	}
 #>
 
+<#
+	foreach (var function in DoubleExtensions.ScalarFunctions)
+	{
+#>
+		public static double[] <#=function#>(this double[] first, in double second)
+		{
+			ValidateParameters(first);
+
+            var result = new double[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, result);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, result);
+            }
+
+            return result;
+		}
+
+		public static double[] <#=function#>Assign(this double[] first, in double second)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, first);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, first);
+            }
+
+            return first;
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void <#=function#>Simd(in double[] first, in double second, in double[] result)
+		{
+			int vectorizedLength = (first.Length / Vector<double>.Count) * Vector<double>.Count;
+
+            ReadOnlySpan<double> sFirst = first;
+            ReadOnlySpan<Vector<double>> vFirst = MemoryMarshal.Cast<double, Vector<double>>(sFirst.Slice(0, vectorizedLength));
+
+            Span<double> sResult = result;
+            Span<Vector<double>> vResult = MemoryMarshal.Cast<double, Vector<double>>(sResult.Slice(0, vectorizedLength));
+
+            for (int i = 0; i < vFirst.Length; i++)
+            {
+                vResult[i] = <#=function#>VectorImplementation(vFirst[i], second);
+            }
+
+            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            {
+                sResult[i] = <#=function#>ScalarImplementation(sFirst[i], second);
+            }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void <#=function#>Fallback(in double[] first, in double second, in double[] result)
+		{
+			for (int i = 0; i < first.Length; i++)
+            {
+                result[i] = <#=function#>ScalarImplementation(first[i], second);
+            }
+		}
+<#
+	}
+#>
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void ValidateParameters<T>(in T[] first)
         {

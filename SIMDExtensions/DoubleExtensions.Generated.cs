@@ -611,6 +611,263 @@ namespace SIMDExtensions
             }
 		}
 
+		public static double[] Add(this double[] first, in double second)
+		{
+			ValidateParameters(first);
+
+            var result = new double[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                AddSimd(first, second, result);
+            }
+            else
+            {
+                AddFallback(first, second, result);
+            }
+
+            return result;
+		}
+
+		public static double[] AddAssign(this double[] first, in double second)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                AddSimd(first, second, first);
+            }
+            else
+            {
+                AddFallback(first, second, first);
+            }
+
+            return first;
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void AddSimd(in double[] first, in double second, in double[] result)
+		{
+			int vectorizedLength = (first.Length / Vector<double>.Count) * Vector<double>.Count;
+
+            ReadOnlySpan<double> sFirst = first;
+            ReadOnlySpan<Vector<double>> vFirst = MemoryMarshal.Cast<double, Vector<double>>(sFirst.Slice(0, vectorizedLength));
+
+            Span<double> sResult = result;
+            Span<Vector<double>> vResult = MemoryMarshal.Cast<double, Vector<double>>(sResult.Slice(0, vectorizedLength));
+
+            for (int i = 0; i < vFirst.Length; i++)
+            {
+                vResult[i] = AddVectorImplementation(vFirst[i], second);
+            }
+
+            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            {
+                sResult[i] = AddScalarImplementation(sFirst[i], second);
+            }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void AddFallback(in double[] first, in double second, in double[] result)
+		{
+			for (int i = 0; i < first.Length; i++)
+            {
+                result[i] = AddScalarImplementation(first[i], second);
+            }
+		}
+		public static double[] Subtract(this double[] first, in double second)
+		{
+			ValidateParameters(first);
+
+            var result = new double[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                SubtractSimd(first, second, result);
+            }
+            else
+            {
+                SubtractFallback(first, second, result);
+            }
+
+            return result;
+		}
+
+		public static double[] SubtractAssign(this double[] first, in double second)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                SubtractSimd(first, second, first);
+            }
+            else
+            {
+                SubtractFallback(first, second, first);
+            }
+
+            return first;
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void SubtractSimd(in double[] first, in double second, in double[] result)
+		{
+			int vectorizedLength = (first.Length / Vector<double>.Count) * Vector<double>.Count;
+
+            ReadOnlySpan<double> sFirst = first;
+            ReadOnlySpan<Vector<double>> vFirst = MemoryMarshal.Cast<double, Vector<double>>(sFirst.Slice(0, vectorizedLength));
+
+            Span<double> sResult = result;
+            Span<Vector<double>> vResult = MemoryMarshal.Cast<double, Vector<double>>(sResult.Slice(0, vectorizedLength));
+
+            for (int i = 0; i < vFirst.Length; i++)
+            {
+                vResult[i] = SubtractVectorImplementation(vFirst[i], second);
+            }
+
+            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            {
+                sResult[i] = SubtractScalarImplementation(sFirst[i], second);
+            }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void SubtractFallback(in double[] first, in double second, in double[] result)
+		{
+			for (int i = 0; i < first.Length; i++)
+            {
+                result[i] = SubtractScalarImplementation(first[i], second);
+            }
+		}
+		public static double[] Multiply(this double[] first, in double second)
+		{
+			ValidateParameters(first);
+
+            var result = new double[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                MultiplySimd(first, second, result);
+            }
+            else
+            {
+                MultiplyFallback(first, second, result);
+            }
+
+            return result;
+		}
+
+		public static double[] MultiplyAssign(this double[] first, in double second)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                MultiplySimd(first, second, first);
+            }
+            else
+            {
+                MultiplyFallback(first, second, first);
+            }
+
+            return first;
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void MultiplySimd(in double[] first, in double second, in double[] result)
+		{
+			int vectorizedLength = (first.Length / Vector<double>.Count) * Vector<double>.Count;
+
+            ReadOnlySpan<double> sFirst = first;
+            ReadOnlySpan<Vector<double>> vFirst = MemoryMarshal.Cast<double, Vector<double>>(sFirst.Slice(0, vectorizedLength));
+
+            Span<double> sResult = result;
+            Span<Vector<double>> vResult = MemoryMarshal.Cast<double, Vector<double>>(sResult.Slice(0, vectorizedLength));
+
+            for (int i = 0; i < vFirst.Length; i++)
+            {
+                vResult[i] = MultiplyVectorImplementation(vFirst[i], second);
+            }
+
+            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            {
+                sResult[i] = MultiplyScalarImplementation(sFirst[i], second);
+            }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void MultiplyFallback(in double[] first, in double second, in double[] result)
+		{
+			for (int i = 0; i < first.Length; i++)
+            {
+                result[i] = MultiplyScalarImplementation(first[i], second);
+            }
+		}
+		public static double[] Divide(this double[] first, in double second)
+		{
+			ValidateParameters(first);
+
+            var result = new double[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                DivideSimd(first, second, result);
+            }
+            else
+            {
+                DivideFallback(first, second, result);
+            }
+
+            return result;
+		}
+
+		public static double[] DivideAssign(this double[] first, in double second)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                DivideSimd(first, second, first);
+            }
+            else
+            {
+                DivideFallback(first, second, first);
+            }
+
+            return first;
+        }
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void DivideSimd(in double[] first, in double second, in double[] result)
+		{
+			int vectorizedLength = (first.Length / Vector<double>.Count) * Vector<double>.Count;
+
+            ReadOnlySpan<double> sFirst = first;
+            ReadOnlySpan<Vector<double>> vFirst = MemoryMarshal.Cast<double, Vector<double>>(sFirst.Slice(0, vectorizedLength));
+
+            Span<double> sResult = result;
+            Span<Vector<double>> vResult = MemoryMarshal.Cast<double, Vector<double>>(sResult.Slice(0, vectorizedLength));
+
+            for (int i = 0; i < vFirst.Length; i++)
+            {
+                vResult[i] = DivideVectorImplementation(vFirst[i], second);
+            }
+
+            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            {
+                sResult[i] = DivideScalarImplementation(sFirst[i], second);
+            }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void DivideFallback(in double[] first, in double second, in double[] result)
+		{
+			for (int i = 0; i < first.Length; i++)
+            {
+                result[i] = DivideScalarImplementation(first[i], second);
+            }
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void ValidateParameters<T>(in T[] first)
         {

@@ -16,6 +16,7 @@ namespace SIMDExtensions
     {
         public static string[] UnaryFunctions = new[] { "Abs", "Negate", "Sqrt" };
         public static string[] BinaryFunctions = new[] { "Add", "Subtract", "Multiply", "Divide", "Max", "Min" };
+        public static string[] ScalarFunctions = new[] { "Add", "Subtract", "Multiply", "Divide" };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector<double> AbsVectorImplementation(Vector<double> left)
@@ -60,6 +61,12 @@ namespace SIMDExtensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> AddVectorImplementation(Vector<double> left, double right)
+        {
+            return left + new Vector<double>(right);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double AddScalarImplementation(double left, double right)
         {
             return left + right;
@@ -69,6 +76,12 @@ namespace SIMDExtensions
         private static Vector<double> SubtractVectorImplementation(Vector<double> left, Vector<double> right)
         {
             return left - right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> SubtractVectorImplementation(Vector<double> left, double right)
+        {
+            return left - new Vector<double>(right);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -84,6 +97,12 @@ namespace SIMDExtensions
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> MultiplyVectorImplementation(Vector<double> left, double right)
+        {
+            return left * right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double MultiplyScalarImplementation(double left, double right)
         {
             return left * right;
@@ -93,6 +112,12 @@ namespace SIMDExtensions
         private static Vector<double> DivideVectorImplementation(Vector<double> left, Vector<double> right)
         {
             return left / right;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<double> DivideVectorImplementation(Vector<double> left, double right)
+        {
+            return left * (1 / right);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
