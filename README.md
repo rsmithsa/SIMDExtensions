@@ -3,6 +3,9 @@ A set of SIMD extensions and helpers for .NET
 
 ## Version History
 
+### 0.2.1
+- Multi target: .NET Standard 2.0; .NET Framework 4.5.2
+
 ### 0.2.0
 - Extension metods for scalars and double arrays
   - Addition/Subtraction/Multiplication/Division
