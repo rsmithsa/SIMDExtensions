@@ -21,7 +21,7 @@ namespace SIMDExtensions.Benchmark
         {
             //BenchmarkRunner.Run<DoubleExtensionsBenchmark>();
 
-            BenchmarkRunner.Run<DoubleExtensionsBenchmark>(ManualConfig.Create(DefaultConfig.Instance)
+            BenchmarkRunner.Run<ArrayExtensionsBenchmark>(ManualConfig.Create(DefaultConfig.Instance)
                 //.With(Job.ShortRun.With(Platform.X64).With(CsProjCoreToolchain.NetCoreApp20))
                 .With(Job.ShortRun.With(Platform.X64).With(CsProjCoreToolchain.NetCoreApp21))
                 //.With(DisassemblyDiagnoser.Create(DisassemblyDiagnoserConfig.Asm))

@@ -64,6 +64,22 @@ namespace SIMDExtensions.Tests
         }
 
         [Fact]
+        public void TestAddScalar()
+        {
+            var first = this.GetInput();
+            var second = 10;
+            var expected = new int[first.Length];
+            for (int i = 0; i < first.Length; i++)
+            {
+                expected[i] = first[i] + second;
+            }
+
+            var result = first.Add(second);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
         public void TestAddAssign()
         {
             var first = this.GetInput();
@@ -122,6 +138,22 @@ namespace SIMDExtensions.Tests
             for (int i = 0; i < first.Length; i++)
             {
                 expected[i] = first[i] * second[i];
+            }
+
+            var result = first.Multiply(second);
+
+            Assert.Equal(expected, result);
+        }
+
+        [Fact]
+        public void TestMultiplyScalar()
+        {
+            var first = this.GetInput();
+            var second = 10;
+            var expected = new int[first.Length];
+            for (int i = 0; i < first.Length; i++)
+            {
+                expected[i] = first[i] * second;
             }
 
             var result = first.Multiply(second);

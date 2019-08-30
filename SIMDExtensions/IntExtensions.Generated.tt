@@ -27,6 +27,24 @@ namespace SIMDExtensions
 	foreach (var function in IntExtensions.UnaryFunctions)
 	{
 #>
+		public static Span<int> <#=function#>(this ReadOnlySpan<int> first)
+		{
+			ValidateParameters(first);
+
+            var result = new int[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, result);
+            }
+            else
+            {
+                <#=function#>Fallback(first, result);
+            }
+
+            return result;
+		}
+
 		public static int[] <#=function#>(this int[] first)
 		{
 			ValidateParameters(first);
@@ -45,6 +63,22 @@ namespace SIMDExtensions
             return result;
 		}
 
+		public static Span<int> <#=function#>Assign(this Span<int> first)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, first);
+            }
+            else
+            {
+                <#=function#>Fallback(first, first);
+            }
+
+            return first;
+        }
+
 		public static int[] <#=function#>Assign(this int[] first)
         {
             ValidateParameters(first);
@@ -62,29 +96,27 @@ namespace SIMDExtensions
         }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void <#=function#>Simd(in int[] first, in int[] result)
+		public static void <#=function#>Simd(in ReadOnlySpan<int> first, in Span<int> result)
 		{
 			int vectorizedLength = (first.Length / Vector<int>.Count) * Vector<int>.Count;
 
-            ReadOnlySpan<int> sFirst = first;
-            ReadOnlySpan<Vector<int>> vFirst = MemoryMarshal.Cast<int, Vector<int>>(sFirst.Slice(0, vectorizedLength));
+            ReadOnlySpan<Vector<int>> vFirst = MemoryMarshal.Cast<int, Vector<int>>(first.Slice(0, vectorizedLength));
 
-            Span<int> sResult = result;
-            Span<Vector<int>> vResult = MemoryMarshal.Cast<int, Vector<int>>(sResult.Slice(0, vectorizedLength));
+            Span<Vector<int>> vResult = MemoryMarshal.Cast<int, Vector<int>>(result.Slice(0, vectorizedLength));
 
             for (int i = 0; i < vFirst.Length; i++)
             {
                 vResult[i] = <#=function#>VectorImplementation(vFirst[i]);
             }
 
-            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            for (int i = vectorizedLength; i < first.Length; i++)
             {
-                sResult[i] = <#=function#>ScalarImplementation(sFirst[i]);
+                result[i] = <#=function#>ScalarImplementation(first[i]);
             }
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void <#=function#>Fallback(in int[] first, in int[] result)
+		public static void <#=function#>Fallback(in ReadOnlySpan<int> first, in Span<int> result)
 		{
 			for (int i = 0; i < first.Length; i++)
             {
@@ -96,9 +128,27 @@ namespace SIMDExtensions
 #>
 
 <#
-	foreach (var function in DoubleExtensions.BinaryFunctions)
+	foreach (var function in IntExtensions.BinaryFunctions)
 	{
 #>
+		public static Span<int> <#=function#>(this ReadOnlySpan<int> first, in ReadOnlySpan<int> second)
+		{
+			ValidateParameters(first, second);
+
+            var result = new int[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, result);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, result);
+            }
+
+            return result;
+		}
+
 		public static int[] <#=function#>(this int[] first, in int[] second)
 		{
 			ValidateParameters(first, second);
@@ -117,6 +167,22 @@ namespace SIMDExtensions
             return result;
 		}
 
+		public static Span<int> <#=function#>Assign(this Span<int> first, in ReadOnlySpan<int> second)
+        {
+            ValidateParameters(first, second);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, first);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, first);
+            }
+
+            return first;
+        }
+
 		public static int[] <#=function#>Assign(this int[] first, in int[] second)
         {
             ValidateParameters(first, second);
@@ -134,32 +200,29 @@ namespace SIMDExtensions
         }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void <#=function#>Simd(in int[] first, in int[] second, in int[] result)
+		public static void <#=function#>Simd(in ReadOnlySpan<int> first, in ReadOnlySpan<int> second, in Span<int> result)
 		{
 			int vectorizedLength = (first.Length / Vector<int>.Count) * Vector<int>.Count;
 
-            ReadOnlySpan<int> sFirst = first;
-            ReadOnlySpan<Vector<int>> vFirst = MemoryMarshal.Cast<int, Vector<int>>(sFirst.Slice(0, vectorizedLength));
+            ReadOnlySpan<Vector<int>> vFirst = MemoryMarshal.Cast<int, Vector<int>>(first.Slice(0, vectorizedLength));
 
-            ReadOnlySpan<int> sSecond = second;
-            ReadOnlySpan<Vector<int>> vSecond = MemoryMarshal.Cast<int, Vector<int>>(sSecond.Slice(0, vectorizedLength));
+            ReadOnlySpan<Vector<int>> vSecond = MemoryMarshal.Cast<int, Vector<int>>(second.Slice(0, vectorizedLength));
 
-            Span<int> sResult = result;
-            Span<Vector<int>> vResult = MemoryMarshal.Cast<int, Vector<int>>(sResult.Slice(0, vectorizedLength));
+            Span<Vector<int>> vResult = MemoryMarshal.Cast<int, Vector<int>>(result.Slice(0, vectorizedLength));
 
             for (int i = 0; i < vFirst.Length; i++)
             {
                 vResult[i] = <#=function#>VectorImplementation(vFirst[i], vSecond[i]);
             }
 
-            for (int i = vectorizedLength; i < sFirst.Length; i++)
+            for (int i = vectorizedLength; i < first.Length; i++)
             {
-                sResult[i] = <#=function#>ScalarImplementation(sFirst[i], sSecond[i]);
+                result[i] = <#=function#>ScalarImplementation(first[i], second[i]);
             }
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void <#=function#>Fallback(in int[] first, in int[] second, in int[] result)
+		public static void <#=function#>Fallback(in ReadOnlySpan<int> first, in ReadOnlySpan<int> second, in Span<int> result)
 		{
 			for (int i = 0; i < first.Length; i++)
             {
@@ -170,8 +233,112 @@ namespace SIMDExtensions
 	}
 #>
 
+<#
+	foreach (var function in IntExtensions.ScalarFunctions)
+	{
+#>
+		public static Span<int> <#=function#>(this ReadOnlySpan<int> first, in int second)
+		{
+			ValidateParameters(first);
+
+            var result = new int[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, result);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, result);
+            }
+
+            return result;
+		}
+
+		public static int[] <#=function#>(this int[] first, in int second)
+		{
+			ValidateParameters(first);
+
+            var result = new int[first.Length];
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, result);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, result);
+            }
+
+            return result;
+		}
+
+		public static Span<int> <#=function#>Assign(this Span<int> first, in int second)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, first);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, first);
+            }
+
+            return first;
+        }
+
+		public static int[] <#=function#>Assign(this int[] first, in int second)
+        {
+            ValidateParameters(first);
+
+            if (Vector.IsHardwareAccelerated)
+            {
+                <#=function#>Simd(first, second, first);
+            }
+            else
+            {
+                <#=function#>Fallback(first, second, first);
+            }
+
+            return first;
+        }
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void ValidateParameters<T>(in T[] first)
+		public static void <#=function#>Simd(in ReadOnlySpan<int> first, in int second, in Span<int> result)
+		{
+			int vectorizedLength = (first.Length / Vector<int>.Count) * Vector<int>.Count;
+
+            ReadOnlySpan<Vector<int>> vFirst = MemoryMarshal.Cast<int, Vector<int>>(first.Slice(0, vectorizedLength));
+
+            Span<Vector<int>> vResult = MemoryMarshal.Cast<int, Vector<int>>(result.Slice(0, vectorizedLength));
+
+            for (int i = 0; i < vFirst.Length; i++)
+            {
+                vResult[i] = <#=function#>VectorImplementation(vFirst[i], second);
+            }
+
+            for (int i = vectorizedLength; i < first.Length; i++)
+            {
+                result[i] = <#=function#>ScalarImplementation(first[i], second);
+            }
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void <#=function#>Fallback(in ReadOnlySpan<int> first, in int second, in Span<int> result)
+		{
+			for (int i = 0; i < first.Length; i++)
+            {
+                result[i] = <#=function#>ScalarImplementation(first[i], second);
+            }
+		}
+<#
+	}
+#>
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void ValidateParameters(in ReadOnlySpan<int> first)
         {
             if (first == null)
             {
@@ -180,7 +347,7 @@ namespace SIMDExtensions
         }
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void ValidateParameters<T>(in T[] first, in T[] second)
+		private static void ValidateParameters(in ReadOnlySpan<int> first, in ReadOnlySpan<int> second)
         {
             if (first == null)
             {
